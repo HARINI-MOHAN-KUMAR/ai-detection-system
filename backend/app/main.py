@@ -1,11 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import text_routes, image_routes, audio_routes, source_routes, url_routes
+from app.api import text_routes, image_routes, audio_routes, source_routes, url_routes, auth_routes
 from app.database import create_tables
 
 app = FastAPI(title="AI Detection System", version="1.0.0")
 
-# Create database tables on startup
 create_tables()
 
 app.add_middleware(
@@ -16,6 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_routes.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(text_routes.router, prefix="/api/text", tags=["Text Detection"])
 app.include_router(image_routes.router, prefix="/api/image", tags=["Image Detection"])
 app.include_router(audio_routes.router, prefix="/api/audio", tags=["Audio Detection"])

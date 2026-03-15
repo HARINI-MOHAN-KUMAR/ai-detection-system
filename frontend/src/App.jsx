@@ -1,18 +1,57 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UploadZone from "./components/UploadZone";
 import ResultCard from "./components/ResultCard";
 import History from "./pages/History";
+import Login from "./pages/Login";
 
 function App() {
   const [result, setResult] = useState(null);
   const [page, setPage] = useState("analyze");
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("username");
+    if (savedUser) setUser(savedUser);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    setUser(null);
+  };
+
+  if (!user) {
+    return <Login onLogin={(username) => setUser(username)} />;
+  }
 
   return (
     <div style={{ width: "100%", maxWidth: "700px" }}>
       {/* Header */}
-      <h1 style={{ fontSize: "2.5rem", fontWeight: 800, textAlign: "center", marginBottom: "0.5rem" }}>
-        🔍 AI Detection System
-      </h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+        <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "#f1f5f9" }}>
+          AI Detection System
+        </h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <span style={{ color: "#64748b", fontSize: "13px" }}>
+            Hi, <strong style={{ color: "#94a3b8" }}>{user}</strong>
+          </span>
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: "6px 16px",
+              borderRadius: "999px",
+              background: "#1e293b",
+              color: "#f87171",
+              border: "1px solid #334155",
+              cursor: "pointer",
+              fontSize: "13px",
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+
       <p style={{ textAlign: "center", color: "#94a3b8", marginBottom: "1.5rem" }}>
         Detect misinformation, deepfakes, and unreliable sources
       </p>
@@ -32,7 +71,7 @@ function App() {
             color: page === "analyze" ? "#ffffff" : "#94a3b8",
           }}
         >
-          🔍 Analyze
+          Analyze
         </button>
         <button
           onClick={() => setPage("history")}
@@ -47,11 +86,10 @@ function App() {
             color: page === "history" ? "#ffffff" : "#94a3b8",
           }}
         >
-          📋 History
+          History
         </button>
       </div>
 
-      {/* Pages */}
       {page === "analyze" && (
         <>
           <UploadZone onResult={setResult} />
