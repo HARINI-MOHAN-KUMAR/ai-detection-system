@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Upload, Link } from "lucide-react";
 
+const API_BASE = "https://ai-detection-system.onrender.com";
+
 function UploadZone({ onResult }) {
   const [dragging, setDragging] = useState(false);
   const [file, setFile] = useState(null);
@@ -17,7 +19,7 @@ function UploadZone({ onResult }) {
       let response;
 
       if (url) {
-        response = await fetch("http://127.0.0.1:8000/api/url/analyze", {
+        response = await fetch(`${API_BASE}/api/url/analyze`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url }),
@@ -25,28 +27,40 @@ function UploadZone({ onResult }) {
       } else if (file) {
         const formData = new FormData();
         formData.append("file", file);
+
         const isAudio = file.type.startsWith("audio");
+
         const endpoint = isAudio
-          ? "http://127.0.0.1:8000/api/audio/detect"
-          : "http://127.0.0.1:8000/api/image/detect";
-        response = await fetch(endpoint, { method: "POST", body: formData });
+          ? `${API_BASE}/api/audio/detect`
+          : `${API_BASE}/api/image/detect`;
+
+        response = await fetch(endpoint, {
+          method: "POST",
+          body: formData,
+        });
+
       } else if (text) {
-        response = await fetch("http://127.0.0.1:8000/api/text/detect", {
+        response = await fetch(`${API_BASE}/api/text/detect`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text }),
         });
+
       } else {
         setError("Please enter text, a URL, or upload a file.");
         setLoading(false);
         return;
       }
 
+      if (!response.ok) {
+        throw new Error("Server error");
+      }
+
       const data = await response.json();
       onResult(data);
 
     } catch (err) {
-      setError("Cannot connect to backend. Make sure it is running on port 8000.");
+      setError("Cannot connect to backend server.");
     }
 
     setLoading(false);
@@ -54,7 +68,6 @@ function UploadZone({ onResult }) {
 
   return (
     <div style={{ width: "100%" }}>
-      {/* Drop Zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
@@ -67,16 +80,22 @@ function UploadZone({ onResult }) {
           textAlign: "center",
           cursor: "pointer",
           background: dragging ? "#1e3a5f" : "#1e293b",
-          transition: "all 0.2s",
         }}
       >
         <Upload style={{ margin: "0 auto 12px", color: "#94a3b8", display: "block" }} size={36} />
+
         {file ? (
-          <p style={{ color: "#4ade80", fontWeight: 600 }}>Attached: {file.name}</p>
+          <p style={{ color: "#4ade80", fontWeight: 600 }}>
+            Attached: {file.name}
+          </p>
         ) : (
           <>
-            <p style={{ color: "#cbd5e1", fontWeight: 500 }}>Drag & drop image, video or audio</p>
-            <p style={{ color: "#64748b", fontSize: "14px", marginTop: "6px" }}>or click to browse files</p>
+            <p style={{ color: "#cbd5e1", fontWeight: 500 }}>
+              Drag & drop image, video or audio
+            </p>
+            <p style={{ color: "#64748b", fontSize: "14px", marginTop: "6px" }}>
+              or click to browse files
+            </p>
           </>
         )}
       </div>
@@ -89,7 +108,6 @@ function UploadZone({ onResult }) {
         onChange={(e) => setFile(e.target.files[0])}
       />
 
-      {/* URL Input */}
       <div style={{ position: "relative", marginTop: "16px" }}>
         <Link style={{ position: "absolute", left: "14px", top: "14px", color: "#64748b" }} size={18} />
         <input
@@ -105,13 +123,10 @@ function UploadZone({ onResult }) {
             border: "1px solid #475569",
             color: "#e2e8f0",
             fontSize: "15px",
-            outline: "none",
-            boxSizing: "border-box",
           }}
         />
       </div>
 
-      {/* Text Area */}
       <textarea
         rows={4}
         placeholder="Or paste news text / article here..."
@@ -127,8 +142,6 @@ function UploadZone({ onResult }) {
           color: "#e2e8f0",
           fontSize: "15px",
           resize: "none",
-          outline: "none",
-          boxSizing: "border-box",
         }}
       />
 
@@ -147,12 +160,11 @@ function UploadZone({ onResult }) {
           padding: "14px",
           borderRadius: "12px",
           background: loading || (!file && !text && !url) ? "#334155" : "#2563eb",
-          color: loading || (!file && !text && !url) ? "#64748b" : "#ffffff",
+          color: "#fff",
           fontWeight: 600,
           fontSize: "16px",
           border: "none",
           cursor: loading || (!file && !text && !url) ? "not-allowed" : "pointer",
-          transition: "all 0.2s",
         }}
       >
         {loading ? "Analyzing..." : "Analyze Now"}
